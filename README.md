@@ -35,17 +35,40 @@ The RTL implementation includes:
 - Synchronous active-high reset.
 - Registered data output.
 
-## 4. FIFO Operation
+## 4. FIFO Architecture
 
-The FIFO supports the following operations:
+The FIFO consists of a memory array, read and write pointers, an occupancy counter, and control logic for managing read and write operations.
 
-- **Write:** Stores input data when the FIFO is not full.
-- **Read:** Outputs stored data when the FIFO is not empty.
-- **Full:** Asserted when all 16 locations are occupied.
-- **Empty:** Asserted when no data is available.
-- **Simultaneous Read/Write:** Supports both operations in the same clock cycle, subject to FIFO boundary conditions.
+```mermaid
+flowchart TB
+    IN["Data Input (8-bit)"] --> MEM["FIFO Memory (16 × 8)"]
+    MEM --> OUT["Registered Data Output (8-bit)"]
 
-The occupancy counter tracks the number of stored elements, while the read and write pointers identify the respective memory locations.
+    CLK["Clock and Reset"] --> CTRL["FIFO Control Logic"]
+    WR["Write Enable"] --> CTRL
+    RD["Read Enable"] --> CTRL
+
+    CTRL --> WP["Write Pointer (4-bit)"]
+    CTRL --> RP["Read Pointer (4-bit)"]
+    CTRL --> CNT["Occupancy Counter (5-bit)"]
+
+    WP --> MEM
+    RP --> MEM
+
+    CNT --> FLAGS["Full / Empty Flag Logic"]
+    FLAGS --> FULL["Full"]
+    FLAGS --> EMPTY["Empty"]
+```
+
+### Working Principle
+
+- **Write Operation:** Stores input data at the location addressed by the write pointer when the FIFO is not full.
+- **Read Operation:** Retrieves data from the location addressed by the read pointer when the FIFO is not empty.
+- **Write Pointer:** Tracks the next memory location for writing.
+- **Read Pointer:** Tracks the next memory location for reading.
+- **Occupancy Counter:** Tracks the number of stored elements.
+- **Full Flag:** Asserted when all 16 memory locations are occupied.
+- **Empty Flag:** Asserted when no data is available.
 
 ## 5. Verification
 
@@ -72,7 +95,7 @@ The waveform below demonstrates FIFO write, read, and simultaneous read/write op
 
 ![FIFO Simulation Waveform](Waveforms/fifo_simulation.png)
 
-### Observations
+### Waveform Observations
 
 - Data values `A5`, `3C`, and `F2` are written into the FIFO.
 - Data is read in the correct FIFO order.
